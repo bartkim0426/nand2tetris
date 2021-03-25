@@ -1,8 +1,3 @@
-// This file is part of www.nand2tetris.org
-// and the book "The Elements of Computing Systems"
-// by Nisan and Schocken, MIT Press.
-// File name: projects/02/ALU.hdl
-
 /**
  * The ALU (Arithmetic Logic Unit).
  * Computes one of the following functions:
@@ -42,5 +37,35 @@ CHIP ALU {
         ng; // 1 if (out < 0),  0 otherwise
 
     PARTS:
-   // Put you code here:
+    // pre-settings the x input
+    Mux16(a=x, b[0]=false, sel=zx, out=x1);
+    Not16(in=x1, out=notx);
+    Mux16(a=x1, b=notx, sel=nx, out=x2);
+
+    // pre-settings the y input
+    Mux16(a=y, b[0]=false, sel=zy, out=y1);
+    Not16(in=y1, out=noty);
+    Mux16(a=y1, b=noty, sel=ny, out=y2);
+
+    // selecting between computing: + or &
+    // if &
+    And16(a=x2, b=y2, out=xAndy);
+    // if + (or 이 아니고 보수 덧셈)
+    Add16(a=x2, b=y2, out=xPlusy);
+    Mux16(a=xAndy, b=xPlusy, sel=f, out=out1);
+
+    // post-selecting the output
+    Not16(in=out1, out=notout1);
+    Mux16(a=out1, b=notout1, sel=no, out=tmpout);
+    // out을 input으로 쓸 수 없기 때문에 tmpout을 만들어주고 out을 한번 더 추가
+    Mux16(a=out1, b=notout1, sel=no, out=out);
+
+    // zr: if out == 0 then zr = 1 else zr = 0
+    // out==0인걸 찾아야됨
+    Or16Way(in=tmpout, out=zeroornot);
+    Mux(a=true, b=false, sel=zeroornot, out=zr);
+    // ng: if out < 0 then ng = 1 else ng = 0
+    // MSB이 1일 경우 음수
+    And(a=in[15], b=true, out=isneg);
+    Mux(a=false, b=true, sel=isneg, out=ng);
 }
