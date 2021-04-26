@@ -155,7 +155,7 @@ CHIP CPU {
     // JLT: if aluOut < 0
     //    if ngOut == 1
     // JNE: if aluOut != 0
-    //    if zrOut == 1
+    //    if zrOut == 0
     // JLE: if aluOut <= 0
     //    if zr == 1 or ng == 1
     // JMP
@@ -176,11 +176,11 @@ CHIP CPU {
     And(a=JLT, b=ngOut, out=JLTout);
 
     // JNE
-    And(a=JNE, b=zrOut, out=JNEout);
+    And(a=JNE, b=NotzrOut, out=JNEout);
 
     // JLE
-    Or(a=zrOut, b=ngOut, out=aluOutJLE);
-    And(a=JLE, b=aluOutJLE, out=JLEout);
+    Or(a=zrOut, b=ngOut, out=zrOrng);
+    And(a=JLE, b=zrOrng, out=JLEout);
 
     Or8Way(
         in[0]=false,
