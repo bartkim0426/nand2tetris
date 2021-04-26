@@ -27,5 +27,43 @@ CHIP Memory {
     OUT out[16];
 
     PARTS:
-    // Put your code here:
+    // address
+    // address[13..14] -> 00 01 10 11
+    // if address[14] == 0 then memory map
+    // if address[14] == 1 and address[13] == 0 then screen map
+    // if address[14] == 1 and address[13] == 1 then keyboard map
+
+    // 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0
+    // 14 13 12 11 10 09 08 07 06 05 04 03 02 01 00
+
+    // ---------------------------------------------------------
+    // memory load
+    //   if load == 1 and address[14] == 0 then load memory
+    Not(in=address[14], out=tmpMemoryLoad);
+    And(a=load, b=tmpMemoryLoad, out=memoryLoad);
+    RAM16K(in=in, load=memoryLoad, address[0..13]=address[0..13], out=memoryOut);
+
+
+    // ---------------------------------------------------------
+    // screen map
+    Not(in=address[13], out=tmpScreenLoad);
+    And(a=address[14], b=tmpScreenLoad, out=screenLoad);
+    Screen(in=in, load=screenLoad, address[0..12]=address[0..12], out=screenOut);
+
+    // ---------------------------------------------------------
+    // keyboard map
+    Keyboard(out=keyboardOut);
+
+    // create output
+    // address[13..14]: 00, 01 -> memory out
+    //                  10     -> screen out
+    //                  11     -> keyboard out
+    Mux4Way16(
+        a=memoryOut,
+        b=memoryOut,
+        c=screenOut,
+        d=keyboardOut,
+        sel=address[13..14],
+        out=out
+    );
 }
