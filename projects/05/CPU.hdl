@@ -39,5 +39,168 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-    // Put your code here:
+    // C instruction
+    // 111 a cccccc ddd jjj
+    // i  _  _  a  c1 c2 c3 c4 c5 c6 d1 d2 d3 j1 j2 j3
+    // 15 14 13 12 11 10 09 08 07 06 05 04 03 02 01 00
+
+
+
+    // -----------------------------------------------------
+    // A register
+
+    // control bit: A instruction이거나 d1이 1인 경우 load
+    //   loadA = 1 if
+    //     instruction[15] is 0 (A instruction) or
+    //     d1 is 1 (A, AM, AD, AMD)
+    //   else 0
+    Not(in=instruction[15], out=isAinstruction);
+    Not(in=isAinstruction, out=isCinstruction);
+    Or(a=isAinstruction, b=instruction[5], out=loadA);
+
+    // A instruction일 경우에는 instruction, 아닐 경우에는 aluOut을 A register에 로드
+    //   if isAinstruction == 1 then instruction else aluOut
+    Mux16(a=aluOut, b=instruction, sel=isAinstruction, out=ARegIn);
+
+    ARegister(in=ARegIn, load=loadA, out=ARegOut, out[0..14]=addressM);              // set A register
+
+
+
+    // -----------------------------------------------------
+    // M: A, M중 뭘 쓸지 결정
+
+    // control bit: M 를 A out 대신 사용하는 경우
+    // C instruction이고 M load하는 comp일 경우에는 A 대신 inM 사용
+    //   loadM = 1 if
+    //     instruction[15] == 1 and
+    //     instruction[12] (a) == 1
+    //   else 0
+    And(a=instruction[15], b=instruction[12], out=loadM);
+
+    // M 로드될 경우 A out 대신 M in을 ALU에 추가해야됨
+    //   if loadM == 1 then inM else ARegout
+    Mux16(a=ARegOut, b=inM, sel=loadM, out=AorMout);         // set A or M
+
+
+
+    // -----------------------------------------------------
+    // D register
+
+    // control bit: ALU에 넣을 D register 설정
+    // C instruction이고 D load하는 comp일 경우에만 D 설정 -> d2 = 1
+    //  loadD = 1 if
+    //    instruction[15] == 1 and
+    //    instruction[4] == 1
+    //  else 0
+    And(a=instruction[15], b=instruction[4], out=loadD);
+
+
+    // ALU out으로부터 D register load
+    DRegister(in=aluOut, load=loadD, out=Dout);                  // set D register
+        
+
+
+    // -----------------------------------------------------
+    // ALU
+    //    x: D register
+    //    y: A or M register (AorM)
+    //   zx: if c1 == 0 then 0 else 1  // c1이 1인 comp의 경우 D가 사용되지 않음
+    //   nx: if c2 == 0 then 0 else 1  // ???
+    //   zy: if c3 == 0 then 0 else 1
+    //   ny: if c4 == 0 then 0 else 1
+    //    f: if c5 == 0 then 0 else 1  //  (x+y) if f == 1 else (x&y)
+    //   no: if c6 == 0 then 0 else 1  //  !out if no else out
+
+    ALU(
+         x=Dout,
+         y=AorMout,
+        zx=instruction[11],
+        nx=instruction[10],
+        zy=instruction[9],
+        ny=instruction[8],
+         f=instruction[7],
+        no=instruction[6],
+
+        out=aluOut,
+        out=outM,
+        zr=zrOut,
+        ng=ngOut
+    );
+
+
+
+
+    // -----------------------------------------------------
+    // PC: Program Counter - emit next intstructino
+    //   input: A register
+    //   JUMP bits들에 의해서 결정
+    //   j1 j2 j3: 000 ~ 111 -> null, JGT, JEQ, JGE, JLT, JNE, JLE, JMP
+    //  if (reset == 1) PC = 0   // reset=1
+    //  else
+    //  load = f(jump bits, ALU outputs)
+    //  if (load == 1)   // load=1
+    //    PC = A
+    //  else
+    //    PC ++   // inc=1
+
+    // instruction의 JUMP 확인
+    DMux8Way(in=true, sel=instruction[0..2], a=NoJMP, b=JGT, c=JEQ, d=JGE, e=JLT, f=JNE, g=JLE, h=JMP);
+    // NoJMP -> nojump
+    // JGT: if aluOut > 0
+    //    if ngOut == 0 and zrOut == 0
+    // JEQ: if aluOut == 0
+    //    if zr == 1
+    // JGE: if aluOut >= 0
+    //    if ng == 0
+    // JLT: if aluOut < 0
+    //    if ngOut == 1
+    // JNE: if aluOut != 0
+    //    if zrOut == 1
+    // JLE: if aluOut <= 0
+    //    if zr == 1 or ng == 1
+    // JMP
+    Not(in=ngOut, out=NotngOut);
+    Not(in=zrOut, out=NotzrOut);
+
+    // JGT
+    And(a=NotngOut, b=NotzrOut, out=aluOutPositive);
+    And(a=JGT, b=aluOutPositive, out=JGTout);
+
+    // JEQ
+    And(a=JEQ, b=zrOut, out=JEQout);
+
+    // JGE
+    And(a=JGE, b=NotngOut, out=JGEout);
+
+    // JLT
+    And(a=JLT, b=ngOut, out=JLTout);
+
+    // JNE
+    And(a=JNE, b=zrOut, out=JNEout);
+
+    // JLE
+    Or(a=zrOut, b=ngOut, out=aluOutJLE);
+    And(a=JLE, b=aluOutJLE, out=JLEout);
+
+    Or8Way(
+        in[0]=false,
+        in[1]=JGTout,
+        in[2]=JEQout,
+        in[3]=JGEout,
+        in[4]=JLTout,
+        in[5]=JNEout,
+        in[6]=JLEout,
+        in[7]=JMP,
+        out=isJMP
+    );
+
+    // only load PC for C instruction and isJMP
+    And(a=isJMP, b=isCinstruction, out=PCload);
+
+    // writeM
+    //    if isCinstruction and d3 == 1 then writeM
+    And(a=isCinstruction, b=instruction[3], out=writeM);
+
+    // Output: PC
+    PC(in=ARegOut, load=PCload, inc=true, reset=reset, out[0..14]=pc);
 }
