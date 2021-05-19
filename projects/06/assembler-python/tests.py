@@ -1,7 +1,7 @@
 from typing import Generator
 from unittest import TestCase
 
-from assembler import Parser, remove_whitespaces, is_comment
+from parser import Parser, remove_whitespaces, is_comment
 
 
 class AssemblerTest(TestCase):

@@ -21,7 +21,7 @@ For More information, check [here](https://github.com/bartkim0426/TIL/blob/maste
 ### usage
 
 ```
-python assembler.py xxx.asm
+$ python assembler.py xxx.asm
 ```
 
 ### Pseudocode
@@ -38,4 +38,10 @@ Parser
     ignore
   else
   yield instruction
+```
+
+### test
+
+```
+$ python -m unittest tests.py
 ```
