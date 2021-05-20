@@ -75,3 +75,4 @@ class AssemblerTest(TestCase):
         for result, expected in zip(parser, instructions):
             with self.subTest(result=result, expected=expected):
                 self.assertEqual(result, expected)
+

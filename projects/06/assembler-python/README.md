@@ -40,8 +40,16 @@ Parser
   yield instruction
 ```
 
+- translator
+
+```
+Translator
+  Initialize 
+```
+
 ### test
 
 ```
 $ python -m unittest tests.py
 ```
+
