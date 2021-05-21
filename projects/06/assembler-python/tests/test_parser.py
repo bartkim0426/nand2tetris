@@ -1,10 +1,24 @@
+import os
 from typing import Generator
 from unittest import TestCase
 
-from parser import Parser, remove_whitespaces, is_comment
+from parser import Parser, remove_whitespaces, is_comment, read_asm_file
 
 
-class AssemblerTest(TestCase):
+ADD_ASM_FILENAME = os.path.join(os.path.dirname(__file__), 'Add.asm')
+
+class ReaderTest(TestCase):
+    def test_reader(self):
+        '''test read Add.asm file and yield line by line'''
+        reader = read_asm_file(ADD_ASM_FILENAME)
+
+        expected_file = open(ADD_ASM_FILENAME, 'r')
+        for result, expect in zip(reader, expected_file):
+            with self.subTest(result=result, expect=expect):
+                self.assertEqual(result, expect.replace('\n', ''))
+        expected_file.close()
+
+class ParserTest(TestCase):
     def test_parse(self):
         '''test parse function'''
         result = remove_whitespaces('@2')
@@ -76,3 +90,11 @@ class AssemblerTest(TestCase):
             with self.subTest(result=result, expected=expected):
                 self.assertEqual(result, expected)
 
+    def test_parser_with_filename(self):
+        '''parser with filename instead of iterator'''
+        instructions = ['@2', 'D=A', '@3', 'D=D+A', '@0', 'M=D',]
+        parser = Parser(filename=ADD_ASM_FILENAME)
+
+        for result, expected in zip(parser, instructions):
+            with self.subTest(result=result, expected=expected):
+                self.assertEqual(result, expected)

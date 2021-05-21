@@ -29,6 +29,11 @@ $ python assembler.py xxx.asm
 - parser
 
 ```
+Reader
+  Read asm file
+  yield line
+end
+
 Parser
   Initialize instructions from input generator
 
@@ -38,13 +43,34 @@ Parser
     ignore
   else
   yield instruction
+end
 ```
 
 - translator
 
 ```
 Translator
-  Initialize 
+  if field is a-instruction
+    return translate_a_instruction(field)
+    
+  if field is c-instruction
+    return translate_c_instruction(field)
+end
+```
+
+- assembler
+
+```
+Assembler
+  reader = Reader(xxx.asm)
+  parser = Parser(reader)
+  
+  output_file = xxx.hack
+  
+  for field in parser:
+    binary_value = translator(field)
+    write binary_value to output_file
+end
 ```
 
 ### test

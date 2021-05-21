@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from translator import translate_a_instruction, translate_c_instruction,\
+from translator import translate_a_instruction, translate_c_instruction, translate,\
         translate_dest, translate_jump, translate_comp, DESTINATION_PARIS, JUMP_PARIS, COMP_PAIRS, \
         divide_c_instruction
 
@@ -12,6 +12,7 @@ class TranslatorTest(TestCase):
         binary_value = '0000000000000010'
 
         self.assertEqual(translate_a_instruction(machine_code), binary_value)
+        self.assertEqual(translate(machine_code), binary_value)
 
     def test_translate_dest(self):
         '''test translate destination code from c-instruction into 3 bits binary value'''
@@ -48,3 +49,4 @@ class TranslatorTest(TestCase):
         binary_value = f'111{comp}{dest}{jump}'
 
         self.assertEqual(translate_c_instruction(machine_code), binary_value)
+        self.assertEqual(translate(machine_code), binary_value)

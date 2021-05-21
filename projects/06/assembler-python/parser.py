@@ -1,4 +1,10 @@
-from typing import Iterator
+from typing import Iterator, Optional
+
+
+def read_asm_file(filename: str) -> Iterator:
+    with open(filename, 'r') as f:
+        value = f.readline()
+        yield value.rstrip()
 
 
 def remove_whitespaces(text: str) -> str:
@@ -17,7 +23,8 @@ class Parser:
     Ignore whitespaces and comments (starts with //)
 
     input:
-        Iterable for instructions
+        filename: (Optional) File name of instruction. If filename is served, instructions params are ignored.
+        instructions: (Optional) Iterable for instructions
 
     property:
         instruction_generator
@@ -35,8 +42,11 @@ class Parser:
     >>> parsed_fields: list = parser.parsed_fields()
     '''
     # TODO; change self.fields into generator
-    def __init__(self, instructions: Iterator):
-        self.instructions = instructions
+    def __init__(self, instructions: Optional[Iterator]=None, filename: Optional[str]=None):
+        if filename:
+            self.instructions = read_asm_file(filename)
+        else:
+            self.instructions = instructions
         self.fields = []
 
     def __iter__(self):
