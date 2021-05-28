@@ -2,7 +2,7 @@ import os
 from typing import Generator
 from unittest import TestCase
 
-from parser import Parser, remove_whitespaces, is_comment, read_asm_file
+from asm_parser import Parser, remove_whitespaces, is_comment, read_asm_file
 
 
 ADD_ASM_FILENAME = os.path.join(os.path.dirname(__file__), 'Add.asm')
@@ -15,7 +15,7 @@ class ReaderTest(TestCase):
         expected_file = open(ADD_ASM_FILENAME, 'r')
         for result, expect in zip(reader, expected_file):
             with self.subTest(result=result, expect=expect):
-                self.assertEqual(result, expect.replace('\n', ''))
+                self.assertEqual(result.strip(), expect.replace('\n', ''))
         expected_file.close()
 
 class ParserTest(TestCase):
@@ -97,4 +97,4 @@ class ParserTest(TestCase):
 
         for result, expected in zip(parser, instructions):
             with self.subTest(result=result, expected=expected):
-                self.assertEqual(result, expected)
+                self.assertEqual(result.strip(), expected)

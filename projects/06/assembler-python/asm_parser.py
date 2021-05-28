@@ -3,8 +3,8 @@ from typing import Iterator, Optional
 
 def read_asm_file(filename: str) -> Iterator:
     with open(filename, 'r') as f:
-        value = f.readline()
-        yield value.rstrip()
+        for line in f:
+            yield line
 
 
 def remove_whitespaces(text: str) -> str:
