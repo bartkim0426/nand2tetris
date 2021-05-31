@@ -62,8 +62,8 @@ end
 
 ```
 Assembler
-  reader = Reader(xxx.asm)
-  parser = Parser(reader)
+  # reader = Reader(xxx.asm)
+  parser = Parser(xxx.asm)
   
   output_file = xxx.hack
   

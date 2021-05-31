@@ -26,8 +26,7 @@ class Parser:
         filename: (Optional) File name of instruction. If filename is served, instructions params are ignored.
         instructions: (Optional) Iterable for instructions
 
-    property:
-        instruction_generator
+    property: instruction_generator
         fields
 
     usage:

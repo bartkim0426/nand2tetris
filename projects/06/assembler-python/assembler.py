@@ -1,6 +1,6 @@
 import os
 import sys
-import getopt
+import argparse
 
 from asm_parser import Parser
 from translator import translate
@@ -22,6 +22,8 @@ class Assembler:
         params:
             asm_path: absolute path for asm file
         '''
+        asm_path = os.path.abspath(asm_path)
+
         dir_name = os.path.dirname(asm_path)
         filename_without_ext = os.path.basename(asm_path).split('.')[0]
 
@@ -39,26 +41,15 @@ class Assembler:
                 f.write(f'{translate(field)}\n')
 
 
-def main(argv):
-    inputfile = ''
-    try:
-      opts, _ = getopt.getopt(argv,"hi",["ifile="])
-    except getopt.GetoptError:
-        print('python assembler.py -i <asm_file_path>')
-        sys.exit(2)
-    for opt, arg in opts:
-        if opt in ['-h', '--help']:
-            print('python assembler.py -i <asm_file_path>')
-            sys.exit()
-        elif opt in ('-i', '--input'):
-            print(f'input path: {arg}')
-            inputfile = arg
-
+def main(args):
+    inputfile = args.input
     assembler = Assembler(inputfile)
     assembler._translate()
-    
     print(f'Translate completed with output file: {assembler.hack_path}')
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    parser = argparse.ArgumentParser(description='Assembler for Hack language')
+    parser.add_argument('-i', '--input', type=str, help='path for asm file.')
+    args =parser.parse_args(sys.argv[1:])
+    main(args)
